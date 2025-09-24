@@ -59,52 +59,51 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
     try {
-        res.clearCookie("token")
-
-        res.json({
-            message: "Logged out successfully",
-            error: false,
-            success: true,
-            data: null
-        })
+        const token = req.headers.authorization.split(" ")[1];
+        if (!token)
+            return res.status(401).json({ error: "Unauthorzed" });
+        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+            if (err)
+                return res.status(401).json({ error: "Unauthorized" });
+        });
+        res.json({ message: "Logout successfully" });
     } catch (error) {
-        res.status(400).json({
-            message: error.message || error,
-            error: true,
-            success: false
-        })
+        res.status(500).json({
+            error: "Login failed",
+            details: error.message
+        });
     }
 }
 
 export const updateUser = async (req, res) => {
     const { skills = [], role, email } = req.body
     try {
-        if(req.user?.role !== "admin"){
-            return res.status(403).json({error: "Forbidden"})
+        if (req.user?.role !== "admin") {
+            return res.status(403).json({ error: "Forbidden" })
         }
         const user = await User.findOne({ email })
-        if(!user){
+        if (!user) {
             return res.status(401).json({ error: "User not found" })
         }
         await User.updateOne(
             { email },
-            { $set: { skills: skills.length ? skills : user.skills}, role }
+            { $set: { skills: skills.length ? skills : user.skills }, role }
         )
         return res.json({ message: "User updated successfully" })
     } catch (error) {
-        res.status(500).json({ error: "Login failed", details: error.message})
+        res.status(500).json({ error: "Login failed", details: error.message })
     }
 }
 
-export const getUsers = async ( req, res ) => {
+export const getUsers = async (req, res) => {
     try {
-        if(req.user?.role !== "admin"){
+        if (req.user?.role !== "admin") {
             return res.status(403).json({ error: "Forbidden" })
         }
         const user = await User.find().select("-password");
         return res.json(user)
-    } catch (error) {       
-        return res.status(500).json({ 
+    } catch (error) {
+        return res.status(500).json({
             error: "update failed",
             details: error.message,
         })
