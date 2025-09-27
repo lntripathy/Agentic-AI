@@ -1,13 +1,12 @@
 import express from "express"
 import connectDB from "./config/db.js"
 import dotenv from "dotenv"
-import { getUsers, login, signup, updateUser } from "./controllers/user.js"
-import { authenticate } from "./middleware/auth.js"
+import router from "./routes/userRoutes.js"
 dotenv.config()
+ 
 
-// checkings 
-
-
+// router connection
+app.use("/api/auth", router)
 
 const app = express()
 
